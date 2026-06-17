@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# IDEs
+.vscode/
+.idea/
+
+# Entornos Virtuales
+venv/
+.venv/
+env/
+
+# Variables de entorno
+.env
+
+# Django
+*.sqlite3
+media/
+staticfiles/
