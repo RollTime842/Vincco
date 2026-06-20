@@ -2,11 +2,9 @@ from django.db import models
 from django.db.models import Q
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from usuarios.models import PerfilUsuario
-from comercios.models import PerfilNegocio, SubRubro, Sucursal
+from comercios.models import PerfilNegocio, Sucursal
 # Create your models here.
 
 class EstadoProductoChoices(models.TextChoices):

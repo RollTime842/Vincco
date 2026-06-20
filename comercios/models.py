@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from usuarios.models import PerfilUsuario
 
 
 class RubroPrincipal(models.Model):

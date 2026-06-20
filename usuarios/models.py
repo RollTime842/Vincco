@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 # Create your models here.
@@ -30,13 +32,6 @@ class Municipio(models.Model):
     def __str__(self):
         return f"{self.nombre}, {self.departamento}"
     
-class Rol(models.Model):
-    nombre = models.CharField(max_length=15, blank=True, null=False)
-
-    def __str__(self):
-        return f"{self.nombre}"
-
-
 class GeneroChoices(models.TextChoices):
     FEMENINO = 'F', _('Femenino')
     MASCULINO = 'M', _('Masculino')
@@ -85,3 +80,13 @@ class PerfilUsuario(models.Model):
     def __str__(self):
         # Extraemos el 'username' del objeto User, lo cual sí es un texto.
         return f"Perfil de {self.usuario.username}"
+    
+def Crear_perfil_usuario(sender, instance, created, **kwargs):
+        if created:
+            PerfilUsuario.objects.create(usuario=instance)
+    
+def Guardar_perfil_usuario(sender, instance, **kwargs):
+        instance.perfil.save()
+
+post_save.connect(Crear_perfil_usuario, sender=User)
+post_save.connect(Guardar_perfil_usuario, sender=User)

@@ -3,11 +3,10 @@ from django.db.models import Q
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from usuarios.models import PerfilUsuario
-from comercios.models import PerfilNegocio, SubRubro, Sucursal
-from inventario.models import Producto, Servicio, UnidadMedida
+from comercios.models import Sucursal
+from inventario.models import Catalogo,Producto, Servicio
 
 # Create your models here.
 class EstadoPedidoChoices(models.TextChoices):
@@ -222,11 +221,11 @@ class Cotizacion(models.Model):
 
 class ItemCotizacion(models.Model):
     """Tabla intermedia para listar los productos solicitados"""
-    cotizacion = models.ForeignKey('Cotizacion', on_delete=models.CASCADE, related_name='items')
+    cotizacion = models.ForeignKey(Cotizacion, on_delete=models.CASCADE, related_name='items')
     
     
-    producto = models.ForeignKey('Producto', on_delete=models.PROTECT, null=True, blank=True)
-    servicio = models.ForeignKey('Servicio', on_delete=models.PROTECT, null=True, blank=True)
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT, null=True, blank=True)
+    servicio = models.ForeignKey(Servicio, on_delete=models.PROTECT, null=True, blank=True)
     
     # Cantidad que requiere el emprendedor
     cantidad = models.PositiveIntegerField()
