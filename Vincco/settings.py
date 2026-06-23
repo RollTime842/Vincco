@@ -44,7 +44,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'corsheaders',
-    'coreapi',
+    'drf_spectacular',
 
     'usuarios.apps.UsuariosConfig',
     'comercios',
@@ -67,9 +67,17 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'Vincco.urls'
 
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny', # Para el prototipo rápido, luego lo aseguramos
     ]
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API de Vincco',
+    'DESCRIPTION': 'Documentación oficial del backend para el ecosistema de Nueva Guinea.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 

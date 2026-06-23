@@ -16,8 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 urlpatterns = [
     path('', include('usuarios.urls')),
     path('admin/', admin.site.urls),
+    # 1. Genera el archivo JSON/YAML con todo el esquema de tu API
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    
+    # 2. Interfaz visual Swagger (La favorita de los desarrolladores)
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    
+    # 3. Interfaz visual Redoc (Más limpia, como para leer un manual)
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+
 ]
