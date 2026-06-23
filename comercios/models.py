@@ -102,11 +102,16 @@ class PerfilNegocio(models.Model):
         return f"{self.nombre}---{self.usuario}"
 
     def clean(self):
-    # Definimos la lista de roles que sí están permitidos
-        roles_permitidos = ['PROVEEDOR', 'EMPRENDEDOR']
-    
-        if self.usuario.rol.nombre.upper() not in roles_permitidos:
-            raise ValidationError("Solo se pueden seleccionar usuarios con rol de Proveedor o Emprendedor.")
+        # 1. Nombres exactos de los Grupos en Django 
+        roles_permitidos = ['Proveedor', 'Emprendedor']
+        
+        tiene_rol_valido = self.usuario.usuario.groups.filter(name__in=roles_permitidos).exists()
+
+        # 3. Si no tiene ninguno de esos grupos, bloqueamos el guardado
+        if not tiene_rol_valido:
+            raise ValidationError({
+                'usuario': "Solo se pueden registrar negocios a usuarios que pertenezcan al grupo de Proveedor o Emprendedor."
+            })
         
 
 

@@ -49,7 +49,7 @@ class PerfilUsuario(models.Model):
     usuario = models.OneToOneField(User,on_delete=models.PROTECT,related_name='perfil')
     telefono = models.CharField(max_length=15, blank=True, null=True)
     cedula = models.CharField(max_length=20, blank=True, null=True)
-    municipio = models.ForeignKey(Municipio, on_delete=models.PROTECT)
+    municipio = models.ForeignKey(Municipio, on_delete=models.PROTECT,null=True)
     genero = models.CharField(
         max_length=3,
         choices=GeneroChoices.choices,
