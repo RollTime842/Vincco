@@ -16,10 +16,33 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from rest_framework.permissions import AllowAny
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenBlacklistView,
+)
+
+
+class TokenObtainPairViewPublica(TokenObtainPairView):
+    permission_classes = [AllowAny]
+
+
+class TokenRefreshViewPublica(TokenRefreshView):
+    permission_classes = [AllowAny]
+
+
+class TokenBlacklistViewPublica(TokenBlacklistView):
+    permission_classes = [AllowAny]
 
 urlpatterns = [
-    path('', include('usuarios.urls')),
+    path('api/usuarios/', include('usuarios.urls')),
+    path('api/transacciones/',include('transacciones.urls')),
+    path('api/comercios/',include('comercios.urls')),
+    path('api/inventario/',include('inventario.urls')),
+    path('api-auth/', include('rest_framework.urls')),
+    
     path('admin/', admin.site.urls),
     # 1. Genera el archivo JSON/YAML con todo el esquema de tu API
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
@@ -29,5 +52,9 @@ urlpatterns = [
     
     # 3. Interfaz visual Redoc (Más limpia, como para leer un manual)
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    
+    path('api/token/', TokenObtainPairViewPublica.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshViewPublica.as_view(), name='token_refresh'),
+    path('api/token/logout/', TokenBlacklistViewPublica.as_view(), name='token_blacklist'),
 
 ]

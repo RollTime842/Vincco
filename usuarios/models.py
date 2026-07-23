@@ -4,9 +4,7 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+import pyotp
 
 
 # Create your models here.
@@ -45,11 +43,22 @@ class EstadoUsuarioChoices(models.TextChoices):
     INACTIVO = 'INA', _('Inactivo')
     SUSPENDIDO = 'SUS', _('Suspendido')
 
+class EstadoVerificacionChoices(models.TextChoices):
+    PENDIENTE = 'pendiente', 'Pendiente de revisión'
+    VERIFICADO = 'verificado', 'Verificado'
+    RECHAZADO = 'rechazado', 'Rechazado'
+    
 class PerfilUsuario(models.Model):
     usuario = models.OneToOneField(User,on_delete=models.PROTECT,related_name='perfil')
     telefono = models.CharField(max_length=15, blank=True, null=True)
     cedula = models.CharField(max_length=20, blank=True, null=True)
-    municipio = models.ForeignKey(Municipio, on_delete=models.PROTECT,null=True)
+    documento_identidad = models.FileField(
+        upload_to='verificaciones/',
+        null=True,
+        blank=True,
+        help_text="Opcional al crear el perfil. Obligatorio antes de que un Administrador pueda aprobar."
+    )
+    municipio = models.ForeignKey(Municipio, on_delete=models.PROTECT,null=True,blank=True)
     genero = models.CharField(
         max_length=3,
         choices=GeneroChoices.choices,
@@ -62,6 +71,23 @@ class PerfilUsuario(models.Model):
         default=EstadoUsuarioChoices.EN_REVISION, 
         help_text="Estado de operatividad y visibilidad de la cuenta."
     )
+    estado_verificacion = models.CharField(
+        max_length=20,
+        choices=EstadoVerificacionChoices.choices,
+        default=EstadoVerificacionChoices.PENDIENTE,
+        db_index=True,
+    )
+    verificado_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='usuarios_verificados',
+        help_text="Administrador que revisó este perfil"
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_revision = models.DateTimeField(null=True, blank=True)
+    motivo_rechazo = models.CharField(max_length=255, blank=True, default='')
     ultima_actividad = models.DateTimeField(auto_now=True)
 
     @property
@@ -72,21 +98,30 @@ class PerfilUsuario(models.Model):
     def fecha_de_registro(self):
         return self.usuario.date_joined
     
+    @property
+    def esta_verificado(self):
+        return self.estado_verificacion == EstadoVerificacionChoices.VERIFICADO
+    
     class Meta:
         verbose_name = "Perfil del usuario"
         verbose_name_plural = "Perfiles de usuarios"
-        ordering = ['usuario'] # Para que siempre salgan en orden alfabético
+        ordering = ['usuario'] 
 
     def __str__(self):
-        # Extraemos el 'username' del objeto User, lo cual sí es un texto.
-        return f"Perfil de {self.usuario.username}"
+        return f"Perfil de {self.usuario.username} ({self.estado_verificacion})"
     
-def Crear_perfil_usuario(sender, instance, created, **kwargs):
-        if created:
-            PerfilUsuario.objects.create(usuario=instance)
-    
-def Guardar_perfil_usuario(sender, instance, **kwargs):
-        instance.perfil.save()
 
-post_save.connect(Crear_perfil_usuario, sender=User)
-post_save.connect(Guardar_perfil_usuario, sender=User)
+    
+class DispositivoTOTP(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='totp')
+    secreto = models.CharField(max_length=32)
+    confirmado = models.BooleanField(default=False)
+
+    def get_totp(self):
+        return pyotp.TOTP(self.secreto)
+
+    def verificar_codigo(self, codigo):
+        return self.get_totp().verify(codigo, valid_window=1)
+
+    def __str__(self):
+        return f"TOTP de {self.usuario.username} ({'confirmado' if self.confirmado else 'pendiente'})"

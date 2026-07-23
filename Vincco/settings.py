@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
 
 # Load environment variables from .env file
 load_dotenv()
@@ -43,6 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'drf_spectacular',
 
@@ -50,6 +53,7 @@ INSTALLED_APPS = [
     'comercios',
     'inventario',
     'transacciones',
+    'core',
 ]
 
 MIDDLEWARE = [
@@ -66,11 +70,28 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'Vincco.urls'
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    ]
+
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny', # Para el prototipo rápido, luego lo aseguramos
-    ]
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,       # cada refresh genera un nuevo refresh token
+    'BLACKLIST_AFTER_ROTATION': True,    # invalida el refresh token viejo al rotar
+    'UPDATE_LAST_LOGIN': True,           # actualiza User.last_login al hacer login
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 SPECTACULAR_SETTINGS = {

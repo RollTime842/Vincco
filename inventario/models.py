@@ -52,7 +52,7 @@ class UnidadMedida(models.Model):
 class Producto(models.Model):
     negocio = models.ForeignKey(
         PerfilNegocio, 
-        on_delete=models.CASCADE, # Si se borra la ferretería, se borran sus clavos y martillos
+        on_delete=models.CASCADE, 
         related_name='productos'
     )
     nombre = models.CharField(max_length=200, help_text="Ej: Consultoría Contable")
@@ -118,7 +118,6 @@ class EstadoCatalogoChoices(models.TextChoices):
 class Catalogo(models.Model):
     sucursal = models.ForeignKey(Sucursal, on_delete=models.CASCADE, related_name='ofertas_catalogo')
     
-    # 2. Los Arcos Exclusivos (Tus productos / servicios)
     producto = models.ForeignKey(Producto, 
                                 on_delete=models.SET_NULL,
                                 null=True, 
@@ -128,32 +127,22 @@ class Catalogo(models.Model):
                                 null=True, 
                                 blank=True)
     
-    # 3. El motor de la gamificación
     puntos_recompensa = models.PositiveIntegerField(
         default=0,
         help_text="Puntos que gana el usuario al comprar esto"
     )
-
-    # 4. (Recomendado) El estado que discutimos en el paso anterior
     estado = models.CharField(
         max_length=20,
         choices=EstadoCatalogoChoices.choices,
         default=EstadoCatalogoChoices.ACTIVO
     )
 
-    # --- VALIDACIÓN ---
     def clean(self):
-        # Regla 1: Validar el Arco Exclusivo 
         if not self.producto and not self.servicio:
             raise ValidationError({'__all__': "El ítem debe ser un Producto o un Servicio."})
         
         if self.producto and self.servicio:
-            raise ValidationError({'__all__': "Un ítem no puede ser Producto y Servicio a la vez."})
-
-        # Regla 2: COHERENCIA DE PROPIEDAD 
-        # Verificamos que el producto que intentan agregar a la sucursal
-        # realmente pertenezca al Negocio (PerfilNegocio) dueño de esa sucursal.
-        
+            raise ValidationError({'__all__': "Un ítem no puede ser Producto y Servicio a la vez."})      
         if self.producto:
             if self.producto.negocio != self.sucursal.negocio:
                 raise ValidationError({
