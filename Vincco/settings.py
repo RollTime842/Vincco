@@ -74,6 +74,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5174",
     ]
+CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -170,4 +171,3 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
-CORS_ALLOW_ALL_ORIGINS = True

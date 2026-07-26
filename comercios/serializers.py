@@ -23,6 +23,7 @@ class SubRubroSerializer(serializers.ModelSerializer):
 
 
 class PerfilNegocioSerializer(serializers.ModelSerializer):
+    perfil_usuario = serializers.PrimaryKeyRelatedField(read_only=True)
     sub_rubro = SubRubroSerializer(read_only=True)
     sub_rubro_id = serializers.PrimaryKeyRelatedField(
         queryset=SubRubro.objects.all(),

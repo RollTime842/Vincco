@@ -1,10 +1,12 @@
 from rest_framework import routers
+from django.urls import path
 from .api import (
     RubroPrincipalViewSet,
     SubRubroViewSet,
     PerfilNegocioViewSet,
     SucursalViewSet,
-    ContactoSucursalViewSet
+    ContactoSucursalViewSet,
+    MisNegociosPendientesView
 )
 
 app_name = "comercios"
@@ -15,4 +17,7 @@ router.register(r'sub-rubros', SubRubroViewSet, basename='sub_rubro')
 router.register(r'perfiles-negocios', PerfilNegocioViewSet, basename='perfil_negocio')
 router.register(r'sucursales', SucursalViewSet, basename='sucursal')
 router.register(r'contactos-sucursales', ContactoSucursalViewSet, basename='contacto_sucursal')
-urlpatterns = router.urls
+
+urlpatterns = router.urls + [
+    path('negocios/pendientes-count/', MisNegociosPendientesView.as_view(), name='negocios-pendientes-count'),
+]

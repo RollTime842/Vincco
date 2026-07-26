@@ -71,6 +71,20 @@ class EstadoNegocioChoices(models.TextChoices):
     SUSPENDIDO = 'suspendido', 'Suspendido (Por infracciones o reportes)'
 
 
+class PerfilNegocioQuerySet(models.QuerySet):
+    def activos(self):
+        return self.filter(estado=EstadoNegocioChoices.ACTIVO)
+
+    def por_sub_rubro(self, sub_rubro_id):
+        if sub_rubro_id:
+            return self.filter(sub_rubro_id=sub_rubro_id)
+        return self
+
+    def buscar(self, texto):
+        if texto:
+            return self.filter(nombre__icontains=texto)
+        return self
+    
 class PerfilNegocio(models.Model):
     perfil_usuario = models.ForeignKey(PerfilUsuario, on_delete=models.PROTECT, related_name='negocios')
     nombre = models.CharField(max_length=50, help_text='Nombre del negocio')
@@ -91,6 +105,8 @@ class PerfilNegocio(models.Model):
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    objects = PerfilNegocioQuerySet.as_manager()
 
     class Meta:
         verbose_name = "Perfil de Negocio"

@@ -1,20 +1,20 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 from django.core.exceptions import PermissionDenied
-from django.core.exceptions import PermissionDenied
+from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from django.utils import timezone
-from .models import EstadoVerificacionChoices
-from core.permissions import EsAdminOSoloLectura
-
-import pyotp, qrcode, io, base64
-from django.contrib.auth import authenticate
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
+import pyotp, qrcode, io, base64
+from django.contrib.auth import authenticate
+
+
+from core.permissions import EsAdminOSoloLectura
+from .models import EstadoVerificacionChoices
 from .models import DispositivoTOTP
 
 
@@ -209,7 +209,18 @@ class ConfirmarTOTPView(APIView):
         return Response({'detail': 'Código incorrecto'}, status=400)
 
 
-class LoginPaso1View(APIView):
+
+class EstadoTOTPView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        activado = DispositivoTOTP.objects.filter(
+            usuario=request.user, confirmado=True
+        ).exists()
+        return Response({'activado': activado})
+
+# usuarios/api.py
+class LoginConCookieView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -222,16 +233,21 @@ class LoginPaso1View(APIView):
 
         tiene_2fa = DispositivoTOTP.objects.filter(usuario=user, confirmado=True).exists()
 
-        if not tiene_2fa:
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'requiere_2fa': False,
-                'requiere_configurar_2fa': True,  # nuevo
-                'access': str(refresh.access_token),
-                'refresh': str(refresh),
-            })
+        if tiene_2fa:
+            return Response({'requiere_2fa': True, 'user_id': user.id})
 
-        return Response({'requiere_2fa': True, 'user_id': user.id})
+        refresh = RefreshToken.for_user(user)
+        response = Response({
+            'requiere_2fa': False,
+            'requiere_configurar_2fa': True,
+            'access': str(refresh.access_token),
+        })
+        response.set_cookie(
+            key='refresh_token', value=str(refresh),
+            httponly=True, secure=False, samesite='Lax',
+            max_age=7 * 24 * 60 * 60, path='/api/',
+        )
+        return response
 
 
 class VerificarTOTPView(APIView):
@@ -251,16 +267,40 @@ class VerificarTOTPView(APIView):
 
         user = User.objects.get(pk=user_id)
         refresh = RefreshToken.for_user(user)
-        return Response({
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
-        })
 
-class EstadoTOTPView(APIView):
+        response = Response({'access': str(refresh.access_token)})
+        response.set_cookie(
+            key='refresh_token', value=str(refresh),
+            httponly=True, secure=False, samesite='Lax',
+            max_age=7 * 24 * 60 * 60, path='/api/',
+        )
+        return response
+
+class RefreshConCookieView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        refresh_token = request.COOKIES.get('refresh_token')
+        if not refresh_token:
+            return Response({'detail': 'No hay sesión activa.'}, status=401)
+        try:
+            refresh = RefreshToken(refresh_token)
+            return Response({'access': str(refresh.access_token)})
+        except Exception:
+            return Response({'detail': 'Sesión inválida o expirada.'}, status=401)
+
+
+class LogoutConCookieView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        activado = DispositivoTOTP.objects.filter(
-            usuario=request.user, confirmado=True
-        ).exists()
-        return Response({'activado': activado})
+    def post(self, request):
+        refresh_token = request.COOKIES.get('refresh_token')
+        if refresh_token:
+            try:
+                RefreshToken(refresh_token).blacklist()
+            except Exception:
+                pass
+
+        response = Response({'detail': 'Sesión cerrada.'})
+        response.delete_cookie('refresh_token', path='/api/')
+        return response

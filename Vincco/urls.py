@@ -23,6 +23,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenBlacklistView,
 )
+from usuarios.api import LoginConCookieView, RefreshConCookieView, LogoutConCookieView
 
 
 class TokenObtainPairViewPublica(TokenObtainPairView):
@@ -53,8 +54,7 @@ urlpatterns = [
     # 3. Interfaz visual Redoc (Más limpia, como para leer un manual)
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     
-    path('api/token/', TokenObtainPairViewPublica.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshViewPublica.as_view(), name='token_refresh'),
-    path('api/token/logout/', TokenBlacklistViewPublica.as_view(), name='token_blacklist'),
-
+    path('api/token/', LoginConCookieView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', RefreshConCookieView.as_view(), name='token_refresh'),
+    path('api/token/logout/', LogoutConCookieView.as_view(), name='token_blacklist'),
 ]
