@@ -59,7 +59,7 @@ class Producto(models.Model):
     descripcion = models.TextField(help_text="Detalles del servicio.")
     precio = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     unidad_medida = models.ForeignKey(UnidadMedida,on_delete=models.PROTECT)
-    stock_disponible = models.PositiveIntegerField()
+    stock_disponible = models.PositiveIntegerField(default=0,null=True)
     foto_portada = models.URLField(blank=True, null=True, help_text="Foto principal para la lista")
     estado = models.CharField(
         max_length=20,
@@ -97,6 +97,12 @@ class Servicio(models.Model):
     descripcion = models.CharField(max_length=200,blank=True,null=False,help_text="Descripcion del servicio")
     precio = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     fecha_publicacion = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(
+    max_length=20,
+    choices=EstadoServicioChoices.choices,
+    default=EstadoServicioChoices.BORRADOR,
+    help_text="Estado actual de disponibilidad en el directorio."
+    )
 
     def __str__(self):
         return f"{self.nombre}"

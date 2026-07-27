@@ -1,3 +1,4 @@
+# comercios/urls.py
 from rest_framework import routers
 from django.urls import path
 from .api import (
@@ -6,7 +7,8 @@ from .api import (
     PerfilNegocioViewSet,
     SucursalViewSet,
     ContactoSucursalViewSet,
-    MisNegociosPendientesView
+    MisNegociosPendientesView,
+    SucursalesCercanasView
 )
 
 app_name = "comercios"
@@ -18,6 +20,7 @@ router.register(r'perfiles-negocios', PerfilNegocioViewSet, basename='perfil_neg
 router.register(r'sucursales', SucursalViewSet, basename='sucursal')
 router.register(r'contactos-sucursales', ContactoSucursalViewSet, basename='contacto_sucursal')
 
-urlpatterns = router.urls + [
+urlpatterns = [
     path('negocios/pendientes-count/', MisNegociosPendientesView.as_view(), name='negocios-pendientes-count'),
-]
+    path('sucursales/cercanas/', SucursalesCercanasView.as_view(), name='sucursales-cercanas'),
+] + router.urls

@@ -156,11 +156,14 @@ class Sucursal(models.Model):
     nombre = models.CharField(max_length=100, help_text="Ej: Sucursal Centro, o 'Servicios a Domicilio'")
     latitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-
+    estado = models.CharField(
+            max_length=20,
+            choices=EstadoNegocioChoices.choices,
+            default=EstadoNegocioChoices.EN_REVISION,
+            db_index=True,
+        )
     def clean(self):
-        # Validamos si es un local físico
         if self.tipo_presencia == TipoSucursalChoices.LOCAL_FISICO:
-            # Si falta la latitud O falta la longitud, disparamos el error
             if not self.latitud or not self.longitud:
                 raise ValidationError({
                     'latitud': "Un local físico debe tener una latitud registrada.",
