@@ -4,6 +4,7 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.contrib.auth.models import User
+from .validators import validar_documento_identidad
 import pyotp
 
 
@@ -56,6 +57,7 @@ class PerfilUsuario(models.Model):
         upload_to='verificaciones/',
         null=True,
         blank=True,
+        validators=[validar_documento_identidad],
         help_text="Opcional al crear el perfil. Obligatorio antes de que un Administrador pueda aprobar."
     )
     municipio = models.ForeignKey(Municipio, on_delete=models.PROTECT,null=True,blank=True)
@@ -109,7 +111,10 @@ class PerfilUsuario(models.Model):
 
     def __str__(self):
         return f"Perfil de {self.usuario.username} ({self.estado_verificacion})"
-    
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     
 class DispositivoTOTP(models.Model):
